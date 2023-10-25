@@ -5,6 +5,8 @@ import random
 from collections import defaultdict
 import urllib.request
 import json
+import os
+from dotenv import load_dotenv
 
 # Dictionary to hold timestamps of user messages
 user_messages = defaultdict(list)
@@ -115,6 +117,6 @@ async def xkcd(ctx):
     await ctx.send(data["title"])
     await ctx.send(ctx.author.mention)
 
-
-token = "MTE2Njc4NDA3ODE4MDI2MTk3OQ.G6cSgK.Awf12a0c7WLY70MAl4cFzP1Ei9mL2Bv-Nc49b8"
+load_dotenv()
+token = os.getenv('DISCORD_TOKEN')
 bot.run(token)  # Starts the bot
