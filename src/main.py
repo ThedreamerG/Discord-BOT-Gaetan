@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 user_messages = defaultdict(list)
 # Channel ID of the #rules channel
 RULES_ID = 1166822092751241306
-Rules_Message = "Welcome to the server! Please read the rules in the #rules channel. React to this message to get the role 'Member'"
+Rules_Message = None
 
 # Toggle for the flood command
 flood_active = False
@@ -33,6 +33,10 @@ bot.author_id = 187517861923782657  # Change to your discord id
 async def on_ready():  # When the bot is ready
     print("I'm in")
     print(bot.user)  # Prints the bot's username and identifier
+    # clean the channel Rules
+    channel = bot.get_channel(RULES_ID)
+    await channel.purge(limit=100)
+    # send the rules
 
 @bot.command()
 async def pong(ctx):
@@ -189,22 +193,28 @@ async def prompt(ctx, *, prompt):
 async def on_member_join(member):
     channel = bot.get_channel(RULES_ID)
     await channel.send(f"Welcome to the server {member.mention}! Please read the rules in the #rules channel.")
-    await channel.send("React to this message to get the role 'Member'")
+    global Rules_Message
+    if Rules_Message is None:
+        Rules_Message = await channel.send("React to this message to get the role 'Member'")
+        await Rules_Message.add_reaction("✅")
 
 
-# when a member reacts to the message in the #rules channel, give them the role "Member"
+# when a member reacts to the message Rules_Message in the #rules channel, give them the role "Member"
 @bot.event
 async def on_raw_reaction_add(payload):
-    if payload.channel_id == RULES_ID:
+    global Rules_Message
+    if payload.message_id == Rules_Message.id and payload.emoji.name == "✅":
         guild = bot.get_guild(payload.guild_id)
         member = guild.get_member(payload.user_id)
         role = discord.utils.get(guild.roles, name="Member")
         if role is None:
             await guild.create_role(name="Member")
             role = discord.utils.get(guild.roles, name="Member")
-            # give the role a color
-            await role.edit(color=discord.Color.green())
+            # set color to green
+            await role.edit(colour=discord.Colour.green())
         await member.add_roles(role)
+        # remove the reaction
+        await Rules_Message.remove_reaction("✅", member)
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
