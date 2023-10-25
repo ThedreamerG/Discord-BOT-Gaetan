@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 
 # Dictionary to hold timestamps of user messages
 user_messages = defaultdict(list)
+# Channel ID of the #rules channel
+RULES_ID = 1166822092751241306
+Rules_Message = "Welcome to the server! Please read the rules in the #rules channel. React to this message to get the role 'Member'"
 
 # Toggle for the flood command
 flood_active = False
@@ -181,6 +184,27 @@ async def prompt(ctx, *, prompt):
     data = json.loads(response.read())
     await ctx.send(data["replies"][0])
 
+# Advanced role management (Directing new members to a #rules channel and giving them basic permissions after they agree, sky is the limit )
+@bot.event
+async def on_member_join(member):
+    channel = bot.get_channel(RULES_ID)
+    await channel.send(f"Welcome to the server {member.mention}! Please read the rules in the #rules channel.")
+    await channel.send("React to this message to get the role 'Member'")
+
+
+# when a member reacts to the message in the #rules channel, give them the role "Member"
+@bot.event
+async def on_raw_reaction_add(payload):
+    if payload.channel_id == RULES_ID:
+        guild = bot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+        role = discord.utils.get(guild.roles, name="Member")
+        if role is None:
+            await guild.create_role(name="Member")
+            role = discord.utils.get(guild.roles, name="Member")
+            # give the role a color
+            await role.edit(color=discord.Color.green())
+        await member.add_roles(role)
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
