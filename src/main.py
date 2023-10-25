@@ -7,7 +7,6 @@ from collections import defaultdict
 import urllib.request
 import json
 import os
-from dotenv import load_dotenv
 
 # Dictionary to hold timestamps of user messages
 user_messages = defaultdict(list)
@@ -216,6 +215,5 @@ async def on_raw_reaction_add(payload):
         # remove the reaction
         await Rules_Message.remove_reaction("✅", member)
 
-load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
 bot.run(token)  # Starts the bot
