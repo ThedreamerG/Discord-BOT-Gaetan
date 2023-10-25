@@ -88,6 +88,8 @@ async def flood(ctx):
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
+    if message.author == bot.user and message.content.startswith("!"):
+        return
 
     if flood_active and not message.author.bot:
         user_messages[message.author.id].append(time.time())
