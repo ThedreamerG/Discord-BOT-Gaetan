@@ -1,3 +1,4 @@
+import asyncio
 import time
 from discord.ext import commands
 import discord
@@ -61,12 +62,12 @@ async def admin(ctx, member: discord.Member):
         role = discord.utils.get(ctx.guild.roles, name="Admin")
     await member.add_roles(role)
 
-# When typing `!ban <A member nickname> <ban reason?>`, your bot should ban that member from the server (**Test with caution**) displaying the input reason for the ban. If no ban reason is input, your bot should display a funny catchphrase picked at random in a given list of catchphrases
+# When typing `!ban <A member nickname> <ban reason?>`, your bot should ban that member from the server (**Test with caution**) displaying the input reason for the ban. If no ban reason is input, your bot should display a funny catchphrase picked at random in a given list of catchphrases de Cyril Hanouna
 
 @bot.command()
 async def ban(ctx, member: discord.Member, reason=None):
     if reason is None:
-        reasons = ["Parce que je suis un méchant bot", "Parce que je suis un bot méchant", "Parce que je suis un bot méchant et que je n'ai pas de raison"]
+        reasons = ["C'est un fdp", "Il est trop moche", "Il est trop con", "Il est trop nul", "Il est trop bête", "Il est trop méchant"]
         reason = random.choice(reasons)
     await ctx.guild.ban(member, reason=reason)
     await ctx.send(f"{member} a été banni pour la raison suivante : {reason}")
@@ -116,6 +117,68 @@ async def xkcd(ctx):
     await ctx.send(data["img"])
     await ctx.send(data["title"])
     await ctx.send(ctx.author.mention)
+# When typing `!poll <q[uestion>`, your bot should post a @here mention followed by a Yes/No question. The bost will then write the question again in another message and add one :thumbsup: and one :thumbsdown: emoji reaction to its message .Define a time-limit for the poll. When the limit has been reached, bot will bot a message with the final result and delete the original poll message
+@bot.command()
+async def poll(ctx, question):
+    await ctx.send("@here")
+    # create a message object
+    message = await ctx.send(question)
+    # destroy the original message
+    await ctx.message.delete()
+    # add reactions to the message
+    await message.add_reaction('👍')
+    await message.add_reaction('👎')
+    # add a timer
+    timer = 10 # seconds
+    await asyncio.sleep(timer)
+    # get the message agains
+    message = await ctx.fetch_message(message.id)
+    # get the reactions
+    reactions = message.reactions
+    # count the reactions
+    yes = 0
+    no = 0
+    for reaction in reactions:
+        if reaction.emoji == '👍':
+            yes = reaction.count
+        elif reaction.emoji == '👎':
+            no = reaction.count
+    # delete the message
+    await message.delete()
+    # send the result
+    await ctx.send(f"Result: {yes - 1} yes and {no - 1} no")
+
+# play a sound from the file sound.mp3
+@bot.command()
+async def play(ctx):
+
+    channel = ctx.author.voice.channel
+    vc = await channel.connect()
+    
+    # Play the music.mp3 file
+    vc.play(discord.FFmpegPCMAudio(executable="/usr/bin/ffmpeg", source="sound.mp3"))
+    
+    # Wait until audio is played
+    while vc.is_playing():
+        await asyncio.sleep(1)
+    
+    await vc.disconnect()
+        
+#  Create a chat-GPT integration with the command `!prompt <prompt to be processed>`
+@bot.command()
+async def prompt(ctx, *, prompt):
+    url = "none"
+    data = {
+        "prompt": prompt,
+        "length": prompt.length + 10,
+        "num_samples": 1,
+    }
+    headers = {"Content-Type": "application/json"}
+    req = urllib.request.Request(url, json.dumps(data).encode(), headers)
+    response = urllib.request.urlopen(req)
+    data = json.loads(response.read())
+    await ctx.send(data["replies"][0])
+
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
